@@ -1,0 +1,1 @@
+2026-10-14 19:09:47,696 - ERROR - API request error: HTTPConnectionPool(host='localhost', port=8080): Max retries exceeded with url: /?from=MDL&to=EUR&date=2025-09-15 (Caused by NewConnectionError("HTTPConnection(host='localhost', port=8080): Failed to establish a new connection: [Errno 111] Connection refused"))

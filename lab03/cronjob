@@ -1,0 +1,9 @@
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Zilnic la ora 06:00: cursul MDL -> EUR pentru ziua precedenta
+0 6 * * * root cd /app && /usr/local/bin/python /app/currency_exchange_rate.py MDL EUR "$(date -d yesterday +\%F)" >> /var/log/cron.log 2>&1
+
+# In fiecare vineri la ora 17:00: cursul MDL -> USD pentru vinerea precedenta
+0 17 * * 5 root cd /app && /usr/local/bin/python /app/currency_exchange_rate.py MDL USD "$(date -d '7 days ago' +\%F)" >> /var/log/cron.log 2>&1

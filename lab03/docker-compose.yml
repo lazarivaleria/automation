@@ -1,0 +1,14 @@
+
+services:
+  currency-cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab03-currency-cron
+    environment:
+      TZ: Europe/Chisinau
+      API_KEY: ${API_KEY}
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./error.log:/app/error.log
