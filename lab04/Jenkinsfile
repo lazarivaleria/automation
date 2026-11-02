@@ -15,7 +15,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 dir('lab04/php-project') {
-                    sh 'vendor/bin/phpunit --testdox'
+                    sh 'vendor/bin/phpunit --testdox tests'
                 }
             }
         }
