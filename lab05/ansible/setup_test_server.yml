@@ -1,0 +1,83 @@
+
+---
+- name: Configure PHP test server
+  hosts: test_servers
+  become: yes
+
+  tasks:
+
+    - name: Update apt package list
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install Apache2
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+
+    - name: Install PHP and extensions
+      ansible.builtin.apt:
+        name:
+          - php
+          - libapache2-mod-php
+          - php-cli
+          - php-mbstring
+          - php-xml
+          - php-curl
+        state: present
+
+         - name: Enable Apache rewrite module
+      ansible.builtin.command:
+        cmd: a2enmod rewrite
+        creates: /etc/apache2/mods-enabled/rewrite.load
+      notify: Restart Apache
+
+    - name: Create project directory
+      ansible.builtin.file:
+        path: /var/www/html/public
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Configure Apache virtual host
+      ansible.builtin.copy:
+        dest: /etc/apache2/sites-available/php-project.conf
+        content: |
+          <VirtualHost *:80>
+              ServerName localhost
+              DocumentRoot /var/www/html/public
+
+              <Directory /var/www/html/public>
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+
+              ErrorLog ${APACHE_LOG_DIR}/php-project-error.log
+              CustomLog ${APACHE_LOG_DIR}/php-project-access.log combined
+          </VirtualHost>
+      notify: Restart Apache
+
+    - name: Enable PHP project virtual host
+      ansible.builtin.command:
+        cmd: a2ensite php-project.conf
+        creates: /etc/apache2/sites-enabled/php-project.conf
+      notify: Restart Apache
+
+    - name: Disable default Apache virtual host
+      ansible.builtin.command:
+        cmd: a2dissite 000-default.conf
+        removes: /etc/apache2/sites-enabled/000-default.conf
+      notify: Restart Apache
+
+    - name: Start and enable Apache2
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: apache2
+        state: restarted

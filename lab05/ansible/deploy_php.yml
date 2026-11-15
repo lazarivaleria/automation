@@ -1,0 +1,27 @@
+
+---
+- name: Deploy PHP project to test server
+  hosts: test_servers
+  become: yes
+
+  tasks:
+
+    - name: Copy PHP project to test server
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../php-project/"
+        dest: /var/www/html/
+        owner: www-data
+        group: www-data
+        mode: preserve
+
+    - name: Set permissions for project
+      ansible.builtin.file:
+        path: /var/www/html
+        owner: www-data
+        group: www-data
+        recurse: yes
+
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: apache2
+        state: restarted

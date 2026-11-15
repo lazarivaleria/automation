@@ -1,0 +1,8 @@
+
+{
+    "name": "lab04/php-project",
+    "description": "PHP project for Jenkins testing",
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    }
+}

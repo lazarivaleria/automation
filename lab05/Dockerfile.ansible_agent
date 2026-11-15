@@ -1,0 +1,36 @@
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    openjdk-17-jre-headless \
+    ansible \
+    python3 \
+    python3-pip \
+    git \
+    rsync \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -s /bin/bash jenkins
+
+RUN mkdir -p /var/run/sshd \
+    /home/jenkins/.ssh \
+    /home/jenkins/agent
+
+COPY secrets/jenkins_to_agents.pub /tmp/authorized_keys
+
+RUN cp /tmp/authorized_keys /home/jenkins/.ssh/authorized_keys \
+    && chown -R jenkins:jenkins /home/jenkins \
+    && chmod 700 /home/jenkins/.ssh \
+    && chmod 600 /home/jenkins/.ssh/authorized_keys
+
+RUN sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config \
+    && sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config \
+    && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D", "-e"]

@@ -1,0 +1,72 @@
+
+name: lab04
+
+services:
+
+  jenkins-controller:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins-controller
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - jenkins-network
+
+  ssh-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.ssh_agent
+    container_name: ssh-agent
+    restart: unless-stopped
+    volumes:
+      - jenkins_agent_volume:/home/jenkins/agent
+    networks:
+      - jenkins-network
+
+  ansible-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.ansible_agent
+    container_name: ansible-agent
+    restart: unless-stopped
+    depends_on:
+      - test-server
+    volumes:
+      - ./secrets/ansible_to_test:/run/secrets/ansible_to_test:ro
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cp /run/secrets/ansible_to_test /home/jenkins/.ssh/ansible_to_test
+        chown jenkins:jenkins /home/jenkins/.ssh/ansible_to_test
+        chmod 600 /home/jenkins/.ssh/ansible_to_test
+        exec /usr/sbin/sshd -D -e
+    networks:
+      - jenkins-network
+
+  test-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.test_server
+    container_name: test-server
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+      - "2222:22"
+    networks:
+      - jenkins-network
+
+volumes:
+  jenkins_home:
+    external: true
+    name: lab04_jenkins_home
+  jenkins_agent_volume:
+    external: true
+    name: lab04_jenkins_agent_volume
+
+networks:
+  jenkins-network:
+    name: jenkins-network
